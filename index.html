@@ -48,7 +48,7 @@
     line-height:1.45; overflow-x:hidden;
     -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:760px; margin:0 auto; padding:14px 9px 116px; min-height:100vh}
+  .wrap{max-width:760px; margin:0 auto; padding:14px 9px calc(24px + env(safe-area-inset-bottom)); min-height:100vh}
 
   /* ---- header ---- */
   header{display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:14px}
@@ -163,31 +163,12 @@
 
   /* ---- toast ---- */
   .toast{
-    position:fixed; left:50%; bottom:86px; transform:translateX(-50%) translateY(10px);
+    position:fixed; left:50%; bottom:24px; transform:translateX(-50%) translateY(10px);
     background:var(--ink); color:var(--bg); font-size:13px; font-weight:500;
     padding:10px 16px; border-radius:10px; box-shadow:var(--shadow); opacity:0; pointer-events:none;
     transition:opacity .2s,transform .2s; z-index:40; max-width:88vw; text-align:center;
   }
   .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
-
-  /* ---- sticky total ---- */
-  .total{
-    position:fixed; left:0; right:0; bottom:0; z-index:20;
-    background:var(--surface); border-top:1px solid var(--line);
-    box-shadow:0 -6px 20px rgba(18,40,34,.08);
-  }
-  .total-in{
-    max-width:760px; margin:0 auto; padding:11px 13px calc(11px + env(safe-area-inset-bottom));
-    display:flex; align-items:center; justify-content:space-between; gap:12px;
-  }
-  .total .tl{display:flex; flex-direction:column; gap:1px}
-  .total .tl b{font-size:14px; font-weight:600}
-  .total .tl small{font-size:11.5px; color:var(--muted)}
-  .total .tv{
-    font-family:"IBM Plex Mono",monospace; font-weight:600; font-size:28px; color:var(--accent-deep);
-    font-variant-numeric:tabular-nums; letter-spacing:-.02em;
-  }
-  .total .tv span{font-size:14px; margin-left:3px; opacity:.7}
 
   /* ---- wide screens: real table ---- */
   @media (min-width:640px){
@@ -252,11 +233,11 @@
 
   <div class="thead" aria-hidden="true">
     <div>#</div>
-    <div>제품명 <span class="tag">a</span></div>
-    <div class="r">미사용g <span class="tag">b</span></div>
-    <div class="r">사용중g <span class="tag">c</span></div>
-    <div class="r">개수 <span class="tag">d</span></div>
-    <div class="r">합계 kg <span class="tag">e</span></div>
+    <div>제품명</div>
+    <div class="r">미사용g</div>
+    <div class="r">사용중g</div>
+    <div class="r">개수</div>
+    <div class="r">합계 kg</div>
   </div>
 
   <div class="list" id="list"></div>
@@ -267,30 +248,30 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<div class="total">
-  <div class="total-in">
-    <div class="tl">
-      <b>총 합계</b>
-      <small id="count">0개 품목</small>
-    </div>
-    <div class="tv" id="grand">0.00<span>kg</span></div>
-  </div>
-</div>
-
 <script>
 (function(){
   "use strict";
-  var KEY="jaego_silsa_v2";
+  var KEY="jaego_silsa_v3";
   var list=document.getElementById("list");
-  var grandEl=document.getElementById("grand");
-  var countEl=document.getElementById("count");
 
   function load(){
     try{ var r=localStorage.getItem(KEY); if(r){var d=JSON.parse(r); if(Array.isArray(d)&&d.length) return d;} }catch(e){}
     return [
-      {a:"냉면",b:"1500",c:"",d:""},
-      {a:"과자",b:"100",c:"",d:""},
-      {a:"고기",b:"600",c:"",d:""}
+      {a:"생강",b:"20000",c:"",d:""},
+      {a:"표고",b:"10000",c:"",d:""},
+      {a:"다시마",b:"10000",c:"",d:""},
+      {a:"캐슈넛",b:"12000",c:"",d:""},
+      {a:"맛소금",b:"20000",c:"",d:""},
+      {a:"후추",b:"10000",c:"",d:""},
+      {a:"꽃게",b:"20000",c:"",d:""},
+      {a:"멸치",b:"20000",c:"",d:""},
+      {a:"새우",b:"20000",c:"",d:""},
+      {a:"설탕",b:"15000",c:"",d:""},
+      {a:"미원",b:"25000",c:"",d:""},
+      {a:"다시다",b:"20000",c:"",d:""},
+      {a:"베트남",b:"20000",c:"",d:""},
+      {a:"정탑",b:"20000",c:"",d:""},
+      {a:"다농",b:"20000",c:"",d:""}
     ];
   }
   function save(){
@@ -322,18 +303,18 @@
       card.innerHTML=
         '<div class="card-top">'+
           '<div class="idx">'+(i+1)+'</div>'+
-          '<div class="name-field"><label>제품명 <span class="tag">a</span></label>'+
+          '<div class="name-field"><label>제품명</label>'+
             '<input type="text" data-k="a" placeholder="제품명 입력" value=""></div>'+
           '<button class="del" title="삭제" aria-label="삭제">✕</button>'+
         '</div>'+
         '<div class="grid">'+
-          '<div class="f b fixed"><label>미사용무게(고정) <span class="tag">b</span></label>'+
+          '<div class="f b fixed"><label>미사용무게(고정)</label>'+
             '<input class="num" data-k="b" inputmode="decimal" placeholder="0"><span class="unit">g</span></div>'+
-          '<div class="f c primary"><label>사용중무게 <span class="tag">c</span></label>'+
+          '<div class="f c primary"><label>사용중무게</label>'+
             '<input class="num" data-k="c" inputmode="decimal" placeholder="0"><span class="unit">g</span></div>'+
-          '<div class="f d primary"><label>개수 <span class="tag">d</span></label>'+
+          '<div class="f d primary"><label>개수</label>'+
             '<input class="num" data-k="d" inputmode="decimal" placeholder="0"><span class="unit">개</span></div>'+
-          '<div class="result"><span class="rlabel">합계 e</span>'+
+          '<div class="result"><span class="rlabel">합계</span>'+
             '<span class="rval"><b class="eout">0.00</b><span>kg</span></span></div>'+
         '</div>';
 
@@ -348,7 +329,7 @@
         inp.addEventListener("input",function(){
           rows[i][inp.getAttribute("data-k")]=inp.value;
           card.querySelector(".eout").textContent=calc(rows[i]).toFixed(2);
-          updateTotal(); save();
+          save();
         });
       });
       card.querySelector(".del").addEventListener("click",function(){
@@ -359,14 +340,6 @@
       list.appendChild(card);
     });
     applyLock();
-    updateTotal();
-  }
-
-  function updateTotal(){
-    var sum=rows.reduce(function(s,r){return s+calc(r);},0);
-    grandEl.innerHTML=sum.toFixed(2)+'<span>kg</span>';
-    var n=rows.filter(function(r){return (r.a&&r.a.trim())||r.b||r.c||r.d;}).length;
-    countEl.textContent=n+"개 품목";
   }
 
   document.getElementById("addBtn").addEventListener("click",function(){
@@ -390,13 +363,11 @@
     return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate());
   }
   function buildCSV(){
-    var out=[], total=0;
-    out.push(["제품명","미사용무게(g)","사용중무게(g)","개수","합계(kg)"].map(csvCell).join(","));
+    var out=[];
+    out.push(["제품명","합계무게(kg)"].map(csvCell).join(","));
     rows.forEach(function(r){
-      var e=calc(r); total+=e;
-      out.push([r.a||"", r.b||"", r.c||"", r.d||"", e.toFixed(2)].map(csvCell).join(","));
+      out.push([r.a||"", calc(r).toFixed(2)].map(csvCell).join(","));
     });
-    out.push(["총 합계","","","",total.toFixed(2)].map(csvCell).join(","));
     return "﻿"+out.join("\r\n"); // BOM for Excel Korean
   }
   document.getElementById("exportBtn").addEventListener("click",function(){
