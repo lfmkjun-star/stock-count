@@ -62,7 +62,6 @@
     background:var(--surface); color:var(--ink); font-size:16px; cursor:pointer; box-shadow:var(--shadow-sm);
   }
   .theme-btn:active{transform:translateY(1px)}
-  .lockbtn.unlocked{border-color:var(--accent); background:var(--accent-soft)}
 
   /* ---- formula note ---- */
   .formula{
@@ -105,12 +104,6 @@
   input[type=text]:focus{outline:none; border-bottom-color:var(--accent)}
   input[type=text]::placeholder{color:var(--faint); font-weight:400}
 
-  .del{
-    flex:none; width:32px; height:32px; border-radius:9px; border:1px solid var(--line);
-    background:var(--surface); color:var(--danger); font-size:15px; cursor:pointer; line-height:1;
-  }
-  .del:active{transform:translateY(1px)}
-
   .grid{display:grid; grid-template-columns:1fr 1fr; gap:9px}
   .f{position:relative}
   .f.wide{grid-column:1 / -1}
@@ -145,15 +138,9 @@
   .result .rval b{font-weight:600}
   .result .rval span{font-size:13px; font-weight:500; margin-left:3px; opacity:.75}
 
-  /* ---- add ---- */
-  .add{
-    width:100%; margin-top:14px; padding:13px; border:1.5px dashed var(--line-strong); border-radius:14px;
-    background:transparent; color:var(--muted); font:600 14px "IBM Plex Sans KR",sans-serif; cursor:pointer;
-  }
-  .add:hover{border-color:var(--accent); color:var(--accent)}
-  .add:active{transform:translateY(1px)}
+  /* ---- actions ---- */
   .export{
-    width:100%; margin-top:9px; padding:12px; border:1px solid var(--line); border-radius:14px;
+    width:100%; margin-top:14px; padding:12px; border:1px solid var(--line); border-radius:14px;
     background:var(--surface); color:var(--ink); font:600 14px "IBM Plex Sans KR",sans-serif; cursor:pointer;
     box-shadow:var(--shadow-sm); display:flex; align-items:center; justify-content:center; gap:7px;
   }
@@ -191,21 +178,12 @@
     .result{grid-column:6; margin:0; background:transparent; padding:0; justify-content:flex-end}
     .result .rlabel{display:none}
     .result .rval{font-size:19px}
-    .del{position:absolute; right:8px; top:8px; width:26px; height:26px; font-size:13px}
-    .card{position:relative}
   }
-  /* ---- locked (실사) mode: a,b read-only; hide add/delete ---- */
+  /* ---- 제품명·미사용무게: 항상 고정(read-only) ---- */
   input[readonly]{cursor:default; border-bottom-color:transparent}
   input[readonly]:focus{border-bottom-color:transparent}
   .num[readonly]{cursor:default; background:var(--surface-3); border-style:dashed; color:var(--muted); box-shadow:none}
   .num[readonly]:focus{border-color:var(--line-strong); box-shadow:none; background:var(--surface-3)}
-  .lock-note{
-    display:none; align-items:center; gap:7px; font-size:12px; color:var(--muted);
-    background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:8px 12px; margin-bottom:12px;
-  }
-  html.is-locked .lock-note{display:flex}
-  html.is-locked .del{display:none}
-  html.is-locked #addBtn{display:none}
 
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -222,7 +200,6 @@
     </div>
     <div class="hbtns">
       <button class="theme-btn resetbtn" id="resetBtn" title="사용중무게·개수 초기화" aria-label="사용중무게·개수 초기화">↺</button>
-      <button class="theme-btn lockbtn" id="lockBtn" title="설정 잠금/해제" aria-label="설정 잠금/해제">🔒</button>
       <button class="theme-btn" id="themeBtn" title="테마 전환" aria-label="테마 전환">◑</button>
     </div>
   </header>
@@ -231,8 +208,6 @@
     계산식
     <code>합계(kg) = ( 미사용무게 × 개수 + 사용중무게 ) ÷ 1000</code>
   </div>
-
-  <div class="lock-note" id="lockNote">🔒 실사 모드 — 제품명·미사용무게는 잠겨 있습니다. 세팅하려면 🔓 를 누르세요.</div>
 
   <div class="thead" aria-hidden="true">
     <div>#</div>
@@ -245,7 +220,6 @@
 
   <div class="list" id="list"></div>
 
-  <button class="add" id="addBtn">+ 제품 추가</button>
   <button class="export" id="exportBtn"><span>⬇</span> CSV 내보내기</button>
 </div>
 
@@ -282,18 +256,6 @@
   }
   var rows=load();
 
-  var locked=true;
-  try{ if(localStorage.getItem(KEY+"_lock")==="0") locked=false; }catch(e){}
-  var lockBtn=document.getElementById("lockBtn");
-  function applyLock(){
-    document.documentElement.classList.toggle("is-locked",locked);
-    lockBtn.textContent = locked ? "🔒" : "🔓";
-    lockBtn.classList.toggle("unlocked",!locked);
-    list.querySelectorAll('[data-k="a"],[data-k="b"]').forEach(function(inp){
-      if(locked) inp.setAttribute("readonly","readonly"); else inp.removeAttribute("readonly");
-    });
-  }
-
   function num(v){ var n=parseFloat(v); return isFinite(n)?n:0; }
   // e = (b * d + c) / 1000  → kg
   function calc(r){ return (num(r.b)*num(r.d)+num(r.c))/1000; }
@@ -308,7 +270,6 @@
           '<div class="idx">'+(i+1)+'</div>'+
           '<div class="name-field"><label>제품명</label>'+
             '<input type="text" data-k="a" placeholder="제품명 입력" value=""></div>'+
-          '<button class="del" title="삭제" aria-label="삭제">✕</button>'+
         '</div>'+
         '<div class="grid">'+
           '<div class="f b fixed"><label>미사용무게(고정)</label>'+
@@ -327,6 +288,9 @@
       card.querySelector('[data-k="c"]').value=r.c||"";
       card.querySelector('[data-k="d"]').value=r.d||"";
       card.querySelector(".eout").textContent=calc(r).toFixed(2);
+      // 제품명·미사용무게는 항상 고정(수정 불가)
+      card.querySelector('[data-k="a"]').setAttribute("readonly","readonly");
+      card.querySelector('[data-k="b"]').setAttribute("readonly","readonly");
 
       card.querySelectorAll("input").forEach(function(inp){
         inp.addEventListener("input",function(){
@@ -335,22 +299,9 @@
           save();
         });
       });
-      card.querySelector(".del").addEventListener("click",function(){
-        rows.splice(i,1);
-        if(!rows.length) rows.push({a:"",b:"",c:"",d:""});
-        save(); render();
-      });
       list.appendChild(card);
     });
-    applyLock();
   }
-
-  document.getElementById("addBtn").addEventListener("click",function(){
-    rows.push({a:"",b:"",c:"",d:""}); save(); render();
-    var cards=list.querySelectorAll(".card");
-    var last=cards[cards.length-1];
-    if(last){ last.querySelector('[data-k="a"]').focus(); last.scrollIntoView({block:"center",behavior:"smooth"}); }
-  });
 
   // ---- toast ----
   var toastEl=document.getElementById("toast"), toastT;
@@ -412,12 +363,6 @@
     rows.forEach(function(r){ r.c=""; r.d=""; });
     save(); render();
     toast("사용중무게·개수를 초기화했습니다");
-  });
-
-  lockBtn.addEventListener("click",function(){
-    locked=!locked;
-    try{ localStorage.setItem(KEY+"_lock", locked?"1":"0"); }catch(e){}
-    applyLock();
   });
 
   // theme toggle
